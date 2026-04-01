@@ -5,7 +5,8 @@ export default function App() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = "https://macro-food-app-1.onrender.com/track";
+  // USE YOUR RENDER URL HERE
+  const API_URL = "https://macro-food-app-2.onrender.com/track";
 
   const addItem = async () => {
     if (!input) return;
@@ -20,7 +21,7 @@ export default function App() {
       setItems([{ ...data, id: Date.now() }, ...items]);
       setInput('');
     } catch (e) {
-      alert("Server waking up... wait 30 seconds and try again!");
+      alert("Server is warming up... try again in 20 seconds.");
     } finally {
       setLoading(false);
     }
@@ -33,55 +34,48 @@ export default function App() {
   const totalCals = items.reduce((sum, i) => sum + (i.calories || 0), 0);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'white', color: 'black', fontFamily: 'sans-serif', padding: '20px' }}>
-      <header style={{ borderBottom: '2px solid black', paddingBottom: '10px', marginBottom: '20px' }}>
-        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '900', textTransform: 'uppercase' }}>Macro Log</h1>
-        <p style={{ margin: 0, fontSize: '40px', fontWeight: '900' }}>{totalCals} <span style={{fontSize: '16px'}}>KCAL</span></p>
-      </header>
+    <div style={{ minHeight: '100vh', backgroundColor: '#ffffff', color: '#000000', fontFamily: '-apple-system, sans-serif', padding: '24px' }}>
+      <div style={{ maxWidth: '450px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: '900', letterSpacing: '-1px', marginBottom: '8px' }}>DAILY LOG</h1>
+        <div style={{ fontSize: '48px', fontWeight: '900', marginBottom: '30px', borderBottom: '5px solid black', paddingBottom: '10px' }}>
+          {totalCals} <span style={{ fontSize: '20px', color: '#666' }}>KCAL</span>
+        </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
-        <input 
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="What did you eat?"
-          style={{ flex: 1, padding: '15px', border: '2px solid black', fontSize: '16px', fontWeight: 'bold' }}
-        />
-        <button 
-          onClick={addItem}
-          style={{ backgroundColor: 'black', color: 'white', border: 'none', padding: '0 20px', fontWeight: 'bold', fontSize: '16px' }}
-        >
-          {loading ? '...' : 'ADD'}
-        </button>
-      </div>
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '30px' }}>
+          <input 
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="What's for lunch?"
+            style={{ flex: 1, padding: '16px', border: '3px solid black', fontSize: '16px', fontWeight: 'bold', borderRadius: '0' }}
+          />
+          <button 
+            onClick={addItem}
+            style={{ backgroundColor: 'black', color: 'white', border: 'none', padding: '0 24px', fontWeight: '900', cursor: 'pointer' }}
+          >
+            {loading ? '...' : 'ADD'}
+          </button>
+        </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {items.map((item) => (
-          <div key={item.id} style={{ border: '2px solid black', padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: '900', fontSize: '18px', textTransform: 'uppercase' }}>{item.food || 'Food'}</div>
-              <div style={{ fontSize: '14px', fontWeight: 'bold' }}>P: {item.protein}g | C: {item.carbs}g | F: {item.fat}g</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {items.map((item) => (
+            <div key={item.id} style={{ border: '3px solid black', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontWeight: '900', fontSize: '18px' }}>{item.food.toUpperCase()}</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#444' }}>P {item.protein}g · C {item.carbs}g · F {item.fat}g</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px', fontWeight: '900' }}>{item.calories}</span>
+                <button 
+                  onClick={() => deleteItem(item.id)}
+                  style={{ background: 'none', border: '2px solid #ff0000', color: '#ff0000', padding: '6px 10px', fontWeight: '900', cursor: 'pointer', fontSize: '12px' }}
+                >
+                  DEL
+                </button>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              <div style={{ fontSize: '20px', fontWeight: '900' }}>{item.calories}</div>
-              <button 
-                onClick={() => deleteItem(item.id)}
-                style={{ backgroundColor: 'white', border: '2px solid black', padding: '8px 12px', fontWeight: 'bold', cursor: 'pointer' }}
-              >
-                DELETE
-              </button>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-
-      {items.length > 0 && (
-        <button 
-          onClick={() => setItems([])}
-          style={{ marginTop: '40px', width: '100%', background: 'none', border: 'none', textDecoration: 'underline', fontWeight: 'bold', cursor: 'pointer' }}
-        >
-          CLEAR ALL
-        </button>
-      )}
     </div>
   );
 }
