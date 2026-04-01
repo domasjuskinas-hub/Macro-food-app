@@ -5,8 +5,7 @@ export default function App() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // https://macro-food-app-1.onrender.com
-  const API_URL = "https://macro-api.onrender.com/track";
+  const API_URL = "https://macro-food-app-1.onrender.com/track";
 
   const addItem = async () => {
     if (!input) return;
