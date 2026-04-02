@@ -1,69 +1,60 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
-import uuid
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Allow frontend access (important for Render)
+# Enable CORS for frontend communication
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# In-memory DB (replace with real DB later)
-meals = []
-
 class Meal(BaseModel):
-    id: str
+    id: int
     name: str
-    grams: float
+    weight: float
     calories: float
     protein: float
     carbs: float
     fats: float
 
-class MealInput(BaseModel):
-    name: str
-    grams: float
+# Database simulation
+db = []
+id_counter = 1
 
-# Fake macro calculator (replace with real API later)
-def calculate_macros(name: str, grams: float):
-    return {
-        "calories": grams * 1.5,
-        "protein": grams * 0.1,
-        "carbs": grams * 0.2,
-        "fats": grams * 0.05,
-    }
-
-@app.get("/")
-def root():
-    return {"message": "Food Macros API running"}
-
-@app.get("/meals")
+@app.get("/meals", response_model=List[Meal])
 def get_meals():
-    return meals
+    return db
 
-@app.post("/meals")
-def add_meal(meal_input: MealInput):
-    macros = calculate_macros(meal_input.name, meal_input.grams)
-
-    meal = {
-        "id": str(uuid.uuid4()),
-        "name": meal_input.name,
-        "grams": meal_input.grams,
-        **macros
-    }
-
-    meals.append(meal)
-    return meal
+@app.post("/analyze")
+def analyze_food(name: str, weight: float):
+    global id_counter
+    # Simple multiplier logic (In a real app, you'd call an AI API here)
+    # Mock data per 100g: 150 cal, 20g protein, 5g carbs, 5g fat
+    factor = weight / 100
+    new_meal = Meal(
+        id=id_counter,
+        name=name,
+        weight=weight,
+        calories=round(150 * factor, 1),
+        protein=round(20 * factor, 1),
+        carbs=round(5 * factor, 1),
+        fats=round(5 * factor, 1)
+    )
+    db.append(new_meal)
+    id_counter += 1
+    return new_meal
 
 @app.delete("/meals/{meal_id}")
-def delete_meal(meal_id: str):
-    global meals
-    meals = [m for m in meals if m["id"] != meal_id]
-    return {"message": "Meal deleted"}
+def delete_meal(meal_id: int):
+    global db
+    db = [m for m in db if m.id != meal_id]
+    return {"message": "Deleted"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
