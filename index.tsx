@@ -14,7 +14,7 @@ const App = () => {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [foodName, setFoodName] = useState('');
   const [weight, setWeight] = useState('');
-  const API_URL = "https:macro-food-app-9.onrender.com."; // Change after deployment
+  const API_URL = "https:macro-food-app-9.onrender.com.";
 
   const fetchMeals = async () => {
     const res = await fetch(`${API_URL}/meals`);
