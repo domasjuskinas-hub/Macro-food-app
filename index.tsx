@@ -1,72 +1,131 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from "react";
+
+type Meal = {
+  id: string;
+  name: string;
+  grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+};
+
+const API = "https://your-render-backend-url.onrender.com";
 
 export default function App() {
-  const [input, setInput] = useState('');
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [grams, setGrams] = useState("");
+  const [meals, setMeals] = useState<Meal[]>([]);
 
-  // YOUR RENDER URL
-  const API_URL = "https://macro-food-app-2.onrender.com/track";
-
-  const addItem = async () => {
-    if (!input) return;
-    setLoading(true);
-    try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: input }),
-      });
-      const data = await res.json();
-      // We add a unique ID so we know which one to delete
-      setItems([{ ...data, id: Date.now() }, ...items]);
-      setInput('');
-    } catch (e) {
-      alert("Render is waking up... try again in 20s");
-    } finally {
-      setLoading(false);
-    }
+  const fetchMeals = async () => {
+    const res = await fetch(`${API}/meals`);
+    const data = await res.json();
+    setMeals(data);
   };
 
-  // THIS IS THE DELETE LOGIC
-  const deleteItem = (id) => {
-    setItems(items.filter(item => item.id !== id));
+  useEffect(() => {
+    fetchMeals();
+  }, []);
+
+  const addMeal = async () => {
+    if (!name || !grams) return;
+
+    await fetch(`${API}/meals`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        grams: Number(grams),
+      }),
+    });
+
+    setName("");
+    setGrams("");
+    fetchMeals();
   };
 
-  const totalCals = items.reduce((sum, i) => sum + (i.calories || 0), 0);
+  const deleteMeal = async (id: string) => {
+    await fetch(`${API}/meals/${id}`, {
+      method: "DELETE",
+    });
+    fetchMeals();
+  };
+
+  const totals = meals.reduce(
+    (acc, m) => ({
+      calories: acc.calories + m.calories,
+      protein: acc.protein + m.protein,
+      carbs: acc.carbs + m.carbs,
+      fats: acc.fats + m.fats,
+    }),
+    { calories: 0, protein: 0, carbs: 0, fats: 0 }
+  );
 
   return (
-    <div style={{ backgroundColor: '#121212', color: 'white', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h2 style={{ margin: '0 0 10px 0' }}>MACRO TRACKER</h2>
-      <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#2ecc71', marginBottom: '20px' }}>
-        {totalCals} <span style={{ fontSize: '16px', color: '#888' }}>KCAL TOTAL</span>
+    <div style={{ padding: 20, background: "#000", color: "#fff", minHeight: "100vh" }}>
+      <h1>Food Macros</h1>
+      <p>Track your nutrition</p>
+
+      {/* Input */}
+      <div style={{ marginBottom: 20 }}>
+        <input
+          placeholder="Food name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          placeholder="Grams"
+          type="number"
+          value={grams}
+          onChange={(e) => setGrams(e.target.value)}
+        />
+        <button onClick={addMeal}>Analyze with AI</button>
       </div>
 
-      <input 
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="e.g. 2 eggs and toast"
-        style={{ width: '100%', padding: '15px', marginBottom: '10px', borderRadius: '8px', border: 'none', background: '#222', color: 'white', fontSize: '16px' }}
-      />
-      <button 
-        onClick={addItem}
-        style={{ width: '100%', padding: '15px', backgroundColor: '#2ecc71', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', fontSize: '16px' }}
-      >
-        {loading ? 'ANALYZING...' : 'ADD MEAL'}
-      </button>
+      {/* Summary */}
+      <div style={{ marginBottom: 20 }}>
+        <h2>Today's Summary</h2>
+        <p>Calories: {totals.calories.toFixed(0)}</p>
+        <p>Protein: {totals.protein.toFixed(1)}g</p>
+        <p>Carbs: {totals.carbs.toFixed(1)}g</p>
+        <p>Fats: {totals.fats.toFixed(1)}g</p>
+      </div>
 
-      <div style={{ marginTop: '30px' }}>
-        {items.map((item) => (
-          <div key={item.id} style={{ background: '#1e1e1e', padding: '15px', borderRadius: '10px', marginBottom: '10px', border: '1px solid #333', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <b style={{ textTransform: 'uppercase' }}>{item.food}</b><br />
-              <span style={{ color: '#888', fontSize: '14px' }}>{item.calories} cal | {item.protein}g P</span>
-            </div>
-            <button 
-              onClick={() => deleteItem(item.id)}
-              style={{ background: 'none', border: '1px solid #ff4444', color: '#ff4444', padding: '5px 10px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
+      {/* Meal List */}
+      <div>
+        <h2>Meals</h2>
+        {meals.length === 0 && <p>No meals yet</p>}
+
+        {meals.map((meal) => (
+          <div
+            key={meal.id}
+            style={{
+              border: "1px solid #333",
+              padding: 10,
+              marginBottom: 10,
+              borderRadius: 10,
+            }}
+          >
+            <h3>{meal.name}</h3>
+            <p>{meal.grams}g</p>
+            <p>Calories: {meal.calories}</p>
+            <p>Protein: {meal.protein}g</p>
+            <p>Carbs: {meal.carbs}g</p>
+            <p>Fats: {meal.fats}g</p>
+
+            {/* DELETE BUTTON */}
+            <button
+              onClick={() => deleteMeal(meal.id)}
+              style={{
+                background: "red",
+                color: "white",
+                padding: "5px 10px",
+                borderRadius: 5,
+              }}
             >
-              REMOVE
+              Delete
             </button>
           </div>
         ))}
